@@ -1,0 +1,8 @@
+services:
+  ad_publisher:
+    container_name: ad_publisher
+    build: ad_publisher
+    volumes:
+      - "./ad_publisher/app:/ad_publisher/app"
+    ports:
+      - "80:80"
