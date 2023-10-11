@@ -6,3 +6,10 @@ services:
       - "./ad_publisher/app:/ad_publisher/app"
     ports:
       - "80:80"
+  ad_bidder:
+    container_name: ad_bidder
+    build: ad_bidder
+    volumes:
+      - "./ad_bidder/app:/ad_bidder/app"
+    ports:
+      - "80:80"
