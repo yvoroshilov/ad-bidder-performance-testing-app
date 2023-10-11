@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from app.model import AdRequest
 
@@ -14,5 +14,7 @@ def root():
 
 
 @app.post("/ad")
-def post_ad(ad_request: AdRequest):
-    logging.debug(f"Ad request received: {ad_request}")
+def post_ad(ad_request: AdRequest, request: Request):
+    print(ad_request)
+    print(request.headers)
+    print(request.cookies)
