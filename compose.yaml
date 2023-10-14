@@ -6,10 +6,16 @@ services:
       - "./ad_publisher/app:/ad_publisher/app"
     ports:
       - "80:80"
+    networks:
+      - backend
   ad_bidder:
     container_name: ad_bidder
     build: ad_bidder
     volumes:
       - "./ad_bidder/app:/ad_bidder/app"
     ports:
-      - "80:80"
+      - "81:80"
+    networks:
+      - backend
+networks:
+  backend:

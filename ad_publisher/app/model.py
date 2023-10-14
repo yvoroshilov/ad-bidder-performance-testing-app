@@ -1,14 +1,17 @@
-from dataclasses import dataclass
-from typing import Optional, Dict
+from typing import Optional
 
 from pydantic import BaseModel
 
 
-@dataclass
 class AdRequest(BaseModel):
     timestamp: str
     language: Optional[str]
-    cookies: Dict[str, str]
+
+
+class BidRequest(BaseModel):
+    id: str
+    timestamp: str
+    language: Optional[str]
 
 
 class AdResponse(BaseModel):

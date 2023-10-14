@@ -1,6 +1,9 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
 class BidRequest(BaseModel):
-    # the same fields as in ad publisher
-    ...
+    id: str
+    timestamp: str
+    language: Optional[str]
