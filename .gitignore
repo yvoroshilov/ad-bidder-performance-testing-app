@@ -1,3 +1,9 @@
+# idea
 *.iml
 .idea
+
+# python
 venv
+build
+dist
+*.egg*
