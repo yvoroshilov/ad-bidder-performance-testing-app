@@ -8,9 +8,9 @@ ARG common_container=/common
 WORKDIR $src_container
 
 COPY $src_host/requirements.txt $src_container/requirements.txt
-COPY $common_host $common_container
-
 RUN pip install --no-cache-dir --upgrade -r $src_container/requirements.txt
+
+COPY $common_host $common_container
 RUN pip install -e $common_container
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
