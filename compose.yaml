@@ -5,7 +5,7 @@ services:
       context: ./
       dockerfile: ./ad_publisher/Dockerfile
     volumes:
-      - "./ad_publisher/app:/ad_publisher/app"
+      - "./ad_publisher/src:/ad_publisher/src"
     ports:
       - "80:80"
     networks:
@@ -16,7 +16,7 @@ services:
       context: ./
       dockerfile: ./ad_bidder/Dockerfile
     volumes:
-      - "./ad_bidder/app:/ad_bidder/app"
+      - "./ad_bidder/src:/ad_bidder/src"
     ports:
       - "81:80"
     networks:
