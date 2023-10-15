@@ -1,11 +1,11 @@
-import datetime
 import logging as log
-import random
+import logging as log
+import uuid
 
 import httpx
-from fastapi import FastAPI, Request, Response, status
+from fastapi import FastAPI, status
 
-from app.model import AdRequest, BidRequest
+from ad_bidder_common.model import BidRequest
 
 app = FastAPI(title="AD PUBLISHER")
 log.basicConfig(level=log.DEBUG)
@@ -17,13 +17,10 @@ def root():
 
 
 @app.post("/ad")
-def post_ad(ad_request: AdRequest, req: Request, resp: Response):
+def post_ad() -> BidRequest:
     log.debug("Ad posted")
     with httpx.Client() as client:
-        bid_request = BidRequest(
-            id=str(random.Random().randint(0, 999999999999999999)),
-            timestamp=str(datetime.datetime.now()),
-            language=ad_request.language)
+        bid_request = BidRequest.minimal(str(uuid.uuid4()), "imp_" + str(uuid.uuid4()))
         body = bid_request.model_dump(mode="json")
         log.debug("Sending bid request: " + str(body))
         r = client.post("http://ad_bidder/bid", json=body)

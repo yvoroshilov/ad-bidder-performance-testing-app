@@ -1,0 +1,11 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ad_bidder_common"
+version = "0.0.1"
+description = "A small example package"
+requires-python = ">=3.11"
+
+[project.urls]

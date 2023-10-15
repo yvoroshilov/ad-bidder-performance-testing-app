@@ -1,7 +1,9 @@
 services:
   ad_publisher:
     container_name: ad_publisher
-    build: ad_publisher
+    build:
+      context: ./
+      dockerfile: ./ad_publisher/Dockerfile
     volumes:
       - "./ad_publisher/app:/ad_publisher/app"
     ports:
@@ -10,7 +12,9 @@ services:
       - backend
   ad_bidder:
     container_name: ad_bidder
-    build: ad_bidder
+    build:
+      context: ./
+      dockerfile: ./ad_bidder/Dockerfile
     volumes:
       - "./ad_bidder/app:/ad_bidder/app"
     ports:
@@ -19,3 +23,10 @@ services:
       - backend
 networks:
   backend:
+#volumes:
+#  ad-bidder-common:
+#    driver: local
+#    driver_opts:
+#      o: bind
+#      type: none
+#      device: "./common"

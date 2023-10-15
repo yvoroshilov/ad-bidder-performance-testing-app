@@ -8,11 +8,5 @@ class AdRequest(BaseModel):
     language: Optional[str]
 
 
-class BidRequest(BaseModel):
-    id: str
-    timestamp: str
-    language: Optional[str]
-
-
 class AdResponse(BaseModel):
     html: str
