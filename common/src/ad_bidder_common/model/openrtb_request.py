@@ -130,7 +130,8 @@ class Banner(BaseModel):
 
 
 class Impression(BaseModel):
-    """At least one impression object is required in a bid request object.
+    """
+    At least one impression object is required in a bid request object.
 
     The “imp” object desribes the ad position or impression being auctioned.
     A single bid request can include multiple “imp” objects,
@@ -138,13 +139,13 @@ class Impression(BaseModel):
     Each “imp” object has a required ID so that bids can reference them individually.
     """
 
-    id: int
+    id: str
     """
     A unique identifier for this impression within the context of the bid request (typically, starts with 1 and increments).
     """
 
     # TODO banner
-    # banner = Field(Banner)
+    banner: Banner
     """
     A Banner object (Section 3.2.3); required if this impression is offered as a banner ad opportunity.
     """
@@ -330,4 +331,4 @@ class BidRequest(BaseModel):
 
     @staticmethod
     def minimal(req_id: str, imp_id: str) -> "BidRequest":
-        return BidRequest(id=req_id, imp=[Impression(id=imp_id, banner=Banner())])
+        return BidRequest(id=req_id, imp=[Impression(id=imp_id, banner=Banner(id="sample_banner_id"))])
