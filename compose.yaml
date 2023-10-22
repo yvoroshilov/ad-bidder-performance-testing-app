@@ -19,6 +19,7 @@ services:
       - "./ad_bidder/src:/ad_bidder/src"
     ports:
       - "81:80"
+    env_file: ./ad_bidder/.env
     networks:
       - backend
 networks:

@@ -1,25 +1,12 @@
-import logging as log
-import uuid
-from random import Random
-
 from fastapi import FastAPI
 
-from ad_bidder_common.model.openrtb_request import BidRequest
-from ad_bidder_common.model.openrtb_response import BidResponse
+from ad_bidder.bid.controller import router as bid_router
+from ad_bidder.logging import configure_logging
+from ad_bidder.metric.controller import router as metric_router
+
+configure_logging()
 
 app = FastAPI(title="AD BIDDER")
-log.basicConfig(level=log.DEBUG)
 
-
-@app.post("/bid")
-def post_bid_request(bid_request: BidRequest) -> BidResponse:
-    log.debug(str(bid_request))
-    bid_response = BidResponse.minimal(
-        _gen_uuid() + "_resp", bid_request.id,
-        bid_request.imp[0].id, Random().random() * 100)
-    bid_response.ext = "passed post_bid_request: " + str(bid_request)
-    return bid_response
-
-
-def _gen_uuid() -> str:
-    return str(uuid.uuid4())
+app.include_router(bid_router, prefix="/bids", tags=["bids"])
+app.include_router(metric_router, prefix="/metrics", tags=["metrics"])
