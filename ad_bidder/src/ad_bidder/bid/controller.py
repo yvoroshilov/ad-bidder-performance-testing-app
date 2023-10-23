@@ -4,15 +4,15 @@ from random import Random
 
 from fastapi import APIRouter
 
-from ad_bidder_common.model.openrtb_request import BidRequest
-from ad_bidder_common.model.openrtb_response import BidResponse
+from ad_bidder_common.model.openrtb.request import BidRequest
+from ad_bidder_common.model.openrtb.response import BidResponse
 
 router = APIRouter()
 
 
 @router.post("")
 def post_bid_request(bid_request: BidRequest) -> BidResponse:
-    log.debug(str(bid_request))
+    log.debug(str(bid_request.ext))
     bid_response = BidResponse.minimal(
         _gen_uuid() + "_resp", bid_request.id,
         bid_request.imp[0].id, Random().random() * 100)

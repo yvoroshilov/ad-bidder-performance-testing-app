@@ -4,8 +4,8 @@ import uuid
 import httpx
 from fastapi import FastAPI, status
 
-from ad_bidder_common.model.openrtb_request import BidRequest
-from ad_bidder_common.model.openrtb_response import BidResponse
+from ad_bidder_common.model.openrtb.request import BidRequest
+from ad_bidder_common.model.openrtb.response import BidResponse
 from ad_publisher.constants import AD_BIDDER_ROOT  # why uvicorn doesn't see "from constants import AD_BIDDER_ROOT"?
 
 app = FastAPI(title="AD PUBLISHER")

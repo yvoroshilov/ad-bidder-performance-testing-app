@@ -12,6 +12,9 @@ class LogLevels(str, Enum):
     ERROR = "ERROR"
     DEBUG = "DEBUG"
 
+    def __str__(self):
+        return str.__str__(self)
+
 
 def configure_logging():
     log_level = str(LOG_LEVEL).upper()
