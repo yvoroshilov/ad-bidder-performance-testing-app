@@ -15,15 +15,34 @@ services:
     build:
       context: ./
       dockerfile: ./ad_bidder/Dockerfile
-    volumes:
-      - "./ad_bidder/src:/ad_bidder/src"
     ports:
       - "81:80"
+    volumes:
+      - "./ad_bidder/src:/ad_bidder/src"
     env_file: ./ad_bidder/.env
+    networks:
+      - backend
+  metric:
+    container_name: metric
+    build: ./metric
+    ports:
+      - "9090:9090"
+    networks:
+      - backend
+  monitoring:
+    container_name: monitoring
+    build: ./monitoring
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
     networks:
       - backend
 networks:
   backend:
+volumes:
+  grafana-storage:
 #volumes:
 #  ad-bidder-common:
 #    driver: local
