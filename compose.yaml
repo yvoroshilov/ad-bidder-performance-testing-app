@@ -24,16 +24,16 @@ services:
     env_file: ./ad_bidder/.env
     networks:
       - backend
-  metric:
-    container_name: metric
-    build: ./metric
+  prom:
+    container_name: prom
+    build: prometheus
     ports:
       - "9090:9090"
     networks:
       - backend
-  monitoring:
-    container_name: monitoring
-    build: ./monitoring
+  grafana:
+    container_name: grafana
+    build: grafana
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -41,9 +41,9 @@ services:
       - grafana-storage:/var/lib/grafana
     networks:
       - backend
-  log_shipper:
+  promtail:
+    container_name: promtail
     image: "grafana/promtail:2.9.3"
-    container_name: log_shipper
     volumes:
       - ./log_shipper/promtail.yml:/etc/promtail/promtail.yml
       - /var/run/docker.sock:/var/run/docker.sock
