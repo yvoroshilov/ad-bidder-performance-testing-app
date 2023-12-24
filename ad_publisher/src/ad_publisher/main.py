@@ -3,6 +3,7 @@ import uuid
 
 import httpx
 from fastapi import FastAPI, status
+from starlette.responses import Response
 
 from ad_bidder_common.model.openrtb.request import BidRequest
 from ad_bidder_common.model.openrtb.response import BidResponse
@@ -30,6 +31,24 @@ def post_ad() -> BidResponse:
             return BidResponse.model_validate_json(r.content)
         else:
             log.warning(r.text)
+
+
+@app.post("/generate_log")
+def generate_log(log_type: str) -> Response:
+    if log_type is None:
+        log.error("Log type cannot be none")
+        raise ValueError("Log type is none")
+    log_msg_methods = {
+        "WARN": lambda: log.warning("Generated warn message!"),
+        "INFO": lambda: log.info("Some useful info"),
+        "DEBUG": lambda: log.debug("This is a debug message")
+    }
+    msg_method = log_msg_methods.get(log_type)
+    if msg_method is None:
+        log.warning(f"Not found log message for log type {log_type}")
+        return status.HTTP_501_NOT_IMPLEMENTED
+    msg_method()
+
 
 
 def _gen_uuid() -> str:

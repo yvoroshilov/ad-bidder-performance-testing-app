@@ -2,7 +2,7 @@ import datetime
 import logging
 import random
 import uuid
-from typing import Iterator, List, Tuple, Any, Callable
+from typing import Iterator, List, Any, Callable
 
 import httpx
 import sys
@@ -39,7 +39,7 @@ def gen_bid_requests(n: int, create_model: Callable[..., Any], chunk_size: int =
     log.info(f"{n} chunks of {chunk_size} size has been generated")
 
 
-def start_bid_request_attack(n: int, *, delay_ms: Tuple[int, int] = (90, 100), chunk_size: int = 1):
+def start_bid_request_attack(n: int, *, delay_ms: tuple[int, int] = (90, 100), chunk_size: int = 1):
     log.info("Starting sending BID requests")
     rand = random.Random()
     req_cnt = 0
@@ -52,11 +52,11 @@ def start_bid_request_attack(n: int, *, delay_ms: Tuple[int, int] = (90, 100), c
                 req_cnt += 1
                 if req_cnt % 1000 == 0:
                     log.debug("Requests sent: " + str(req_cnt))
-                sleep(rand.randrange(delay_ms[0], delay_ms[1]) / 1000)
+                sleep(rand.randrange(delay_ms[0], delay_ms[1] + 1) / 1000)
 
 
 def main():
-    start_bid_request_attack(10000, chunk_size=1, delay_ms=(0, 1))
+    start_bid_request_attack(1000, chunk_size=1, delay_ms=(1 * 1000, 1 * 1000))
 
 
 if __name__ == '__main__':
