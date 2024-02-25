@@ -1,36 +1,49 @@
 import datetime
-from typing import List
+from enum import Enum
+from typing import List, Optional
 
 from pydantic import BaseModel
 
-from ad_bidder_common.model.openrtb.request import BidRequest
+from ad_bidder_common.model.openrtb.request import Content, Producer, Device, Geo, User, Data
+from ad_bidder_common.model.openrtb.response import SeatBid
 from ad_publisher.auction.auction_service import AuctionAlgorithm
+
+
+class AdRequest(BaseModel):
+    timestamp: datetime.datetime
+    content: Content
+    producer: Producer
+    device: Device
+    geo: Geo
+    user: User
+    data: Data
 
 
 class AdResponse(BaseModel):
     html: str
 
 
-class Auction(BaseModel):
-    id: str
-    ad: "Ad"
-    reserved_price: float
-    start_time: datetime.datetime
-    finish_time: datetime.datetime
-    bid_request: BidRequest
-    bidders: List["AdBidder"]
-    algorithm: AuctionAlgorithm
-
-
 class AdBidder(BaseModel):
     id: str
 
 
-class AdBid(BaseModel):
-    ad_bidder: "AdBidder"
-    auction: "Auction"
-    amount: float
-
-
 class Ad:
     html: str
+
+
+class AuctionStatus(Enum):
+    PENDING = 1
+    RUNNING = 2
+    FINISHED = 3
+
+
+class Auction(BaseModel):
+    id: str
+    reserved_price: float
+    start_time: Optional[datetime.datetime] = None
+    finish_time: Optional[datetime.datetime] = None
+    ad_request: AdRequest
+    bidders: List[AdBidder]
+    algorithm: AuctionAlgorithm
+    bids: List[SeatBid]
+    status: AuctionStatus
