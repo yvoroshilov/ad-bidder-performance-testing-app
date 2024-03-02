@@ -1,58 +1,16 @@
 import datetime
 import logging as log
-import random
 import uuid
-from abc import abstractmethod, ABC
 from typing import List, Dict
 
-from ad_bidder_common.model.openrtb.response import Bid
-from ad_publisher.model import SeatBid, Auction, AdRequest, AdBidder
+import httpx
+from starlette import status
 
-
-class AuctionAlgorithm(ABC):
-    @abstractmethod
-    def calc_winner(self, bids: List[Bid], reserved_price: float) -> List[str, Bid]:
-        pass
-
-    @abstractmethod
-    def name(self) -> str:
-        pass
-
-
-class DefaultAuctionAlgorithm(AuctionAlgorithm):
-    def calc_winner(self, bids: List[Bid], reserved_price: float) -> Dict[str, Bid]:
-        log.debug("Start calc_winner")
-
-        eligible_bids = filter(lambda bid: bid.price >= reserved_price, bids)
-        log.debug(f"Eligible bids count={len(eligible_bids)}")
-
-        impid_bids = {}
-        for bid in eligible_bids:
-            if bid.impid in impid_bids:
-                impid_bids[bid.impid].append(bid)
-            else:
-                impid_bids[bid.impid] = [bid]
-
-        winners = {}
-        for impid in impid_bids:
-            bids_for_impid = impid_bids[impid]
-            highest_price_bid = max(bids_for_impid, key=lambda bid: bid.price)
-            winners[impid] = highest_price_bid
-            log.debug(f"Winner for impid={impid} is price={highest_price_bid}")
-
-        return winners
-
-    def name(self) -> str:
-        return "First highest"
-
-
-class SecondHighestAuctionAlgorithm(AuctionAlgorithm):
-    def calc_winner(self, bids: List[Bid], reserved_price: float) -> List[str, Bid]:
-        pass
-
-    def name(self) -> str:
-        return "Second highest"
-
+from ad_bidder_common.data_gen import gen_bid_request
+from ad_bidder_common.model.openrtb.response import Bid, BidResponse
+from ad_publisher.auction.algorithm import DefaultAuctionAlgorithm
+from ad_publisher.constants import AD_BIDDER_ROOT
+from ad_publisher.model import Auction, AdRequest, AdBidder
 
 
 def init_auction(ad_request: AdRequest) -> Auction:
@@ -63,21 +21,32 @@ def init_auction(ad_request: AdRequest) -> Auction:
     return auction
 
 
-def run_auction(auction: Auction) -> List[str, Bid]:
+def run_auction(auction: Auction) -> Dict[str, Bid]:
     log.info(f"Auction id={auction.id} started")
     bidders = _get_bidders()
     seat_bids = []
     for bidder in bidders:
-        # TODO Get bid from bidder
-        bids = [Bid(id=_gen_id(), impid=_gen_id(), price=random.randrange(1, 100))]
-        seat_bids.append(SeatBid(bid=bids))
+        bid_response = _get_bid(bidder)
+        seat_bids.append(bid_response.seatbid[0])
     bids = [bid for seat_bid in seat_bids for bid in seat_bid.bid]
-    winner = auction.algorithm.calc_winner(bids, auction.reserved_price)
+    winners = auction.algorithm.calc_winner(bids, auction.reserved_price)
+    _finish_auction(auction)
     log.info(f"Auction id={auction.id} finished")
-    return winner
+    return winners
 
 
-def finish_auction(auction: Auction) -> Auction:
+def _get_bid(bidder: AdBidder) -> BidResponse:
+    bid_request = gen_bid_request()
+    body = bid_request.model_dump(mode="json")
+    log.debug("Sending bid request: " + str(body))
+    with httpx.Client() as client:
+        response = client.post(bidder.bid_request_url, json=body)
+        if response.status_code != status.HTTP_200_OK:
+            raise Exception(f"Couldn't get ad response. Received: {str(response)}")
+        return BidResponse.model_validate_json(response.content)
+
+
+def _finish_auction(auction: Auction) -> Auction:
     auction.finish_time = datetime.datetime.now()
     return auction
 
@@ -87,7 +56,8 @@ def _get_reserved_price() -> float:
 
 
 def _get_bidders() -> List[AdBidder]:
-    return [AdBidder(id=_gen_id()), AdBidder(id=_gen_id())]
+    # TODO get from db
+    return [AdBidder(id=_gen_id(), bid_request_url=AD_BIDDER_ROOT)]
 
 
 def _gen_id() -> str:

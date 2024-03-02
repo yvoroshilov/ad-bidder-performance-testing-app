@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from ad_bidder_common.model.openrtb.request import Content, Producer, Device, Geo, User, Data
 from ad_bidder_common.model.openrtb.response import SeatBid
-from ad_publisher.auction.auction_service import AuctionAlgorithm
+from ad_publisher.auction.algorithm import AuctionAlgorithm
 
 
 class AdRequest(BaseModel):
@@ -25,6 +25,7 @@ class AdResponse(BaseModel):
 
 class AdBidder(BaseModel):
     id: str
+    bid_request_url: str
 
 
 class Ad:
