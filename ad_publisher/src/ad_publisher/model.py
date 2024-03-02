@@ -1,6 +1,6 @@
 import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel
 
@@ -40,10 +40,10 @@ class AuctionStatus(Enum):
 class Auction(BaseModel):
     id: str
     reserved_price: float
-    start_time: Optional[datetime.datetime] = None
-    finish_time: Optional[datetime.datetime] = None
+    start_time: datetime.datetime = None
+    finish_time: datetime.datetime = None
     ad_request: AdRequest
     bidders: List[AdBidder]
     algorithm: AuctionAlgorithm
-    bids: List[SeatBid]
-    status: AuctionStatus
+    bids: List[SeatBid] = None
+    status: AuctionStatus = AuctionStatus.PENDING
