@@ -151,15 +151,15 @@ class Content(BaseModel):
     Additional content data. Each Data object (Section 3.2.21) represents a different data source.
     """
 
-    network: Optional["Network"] = None
-    """
-    Details about the network (Section 3.2.23) the content is on.
-    """
+    # network: Optional["Network"] = None
+    # """
+    # Details about the network (Section 3.2.23) the content is on.
+    # """
 
-    channel: Optional["Channel"] = None
-    """
-    Details about the channel (Section 3.2.24) the content is on.
-    """
+    # channel: Optional["Channel"] = None
+    # """
+    # Details about the channel (Section 3.2.24) the content is on.
+    # """
 
     ext: Optional[Any] = None
     """
@@ -534,10 +534,10 @@ class Data(BaseModel):
     Network the content is on (e.g., a TV network like “ABC")
     """
 
-    segment: Optional[List["Segment"]] = None
-    """
-    The primary domain of the network (e.g. “abc.com” in the case of the network ABC). It is recommended to include the top private domain (PSL+1) for DSP targeting normalization purposes.
-    """
+    # segment: Optional[List["Segment"]] = None
+    # """
+    # The primary domain of the network (e.g. “abc.com” in the case of the network ABC). It is recommended to include the top private domain (PSL+1) for DSP targeting normalization purposes.
+    # """
 
     ext: Optional[Any] = None
     """

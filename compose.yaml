@@ -43,16 +43,16 @@ services:
       - backend
   promtail:
     container_name: promtail
-    image: "grafana/promtail:2.9.3"
+    image: "grafana/promtail:2.9.5"
     volumes:
-      - ./log_shipper/promtail.yml:/etc/promtail/promtail.yml
+      - ./promtail/promtail.yml:/etc/promtail/promtail.yml
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     command: -config.file=/etc/promtail/promtail.yml
     networks:
       - backend
   loki:
-    image: grafana/loki:2.9.3
+    image: grafana/loki:2.9.5
     container_name: loki
     ports:
       - "3100"

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from ad_bidder.bid.controller import router as bid_router
-from ad_bidder.logging import configure_logging
+from ad_bidder.log import configure_logging
 
 configure_logging()
 

@@ -2,34 +2,11 @@ import datetime
 from enum import Enum
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
-from ad_bidder_common.model.openrtb.request import Content, Producer, Device, Geo, User, Data
 from ad_bidder_common.model.openrtb.response import SeatBid
+from ad_publisher.ad.model import AdRequest, AdBidder
 from ad_publisher.auction.algorithm import AuctionAlgorithm
-
-
-class AdRequest(BaseModel):
-    timestamp: datetime.datetime
-    content: Content
-    producer: Producer
-    device: Device
-    geo: Geo
-    user: User
-    data: Data
-
-
-class AdResponse(BaseModel):
-    html: str
-
-
-class AdBidder(BaseModel):
-    id: str
-    bid_request_url: str
-
-
-class Ad:
-    html: str
 
 
 class AuctionStatus(Enum):
@@ -39,6 +16,8 @@ class AuctionStatus(Enum):
 
 
 class Auction(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     id: str
     reserved_price: float
     start_time: datetime.datetime = None
@@ -48,3 +27,8 @@ class Auction(BaseModel):
     algorithm: AuctionAlgorithm
     bids: List[SeatBid] = None
     status: AuctionStatus = AuctionStatus.PENDING
+
+
+class BidStatus(Enum):
+    WIN = 1
+    LOSS = 2

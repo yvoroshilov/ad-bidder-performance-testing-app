@@ -4,7 +4,8 @@ import prometheus_client as prom
 from fastapi import APIRouter
 from starlette.responses import Response
 
-from ad_bidder.service import bid_service
+from ad_bidder.bid import service as bid_service
+from ad_bidder.bid.model import BidStatus
 from ad_bidder_common.model.openrtb.request import BidRequest
 from ad_bidder_common.model.openrtb.response import BidResponse
 
@@ -23,6 +24,12 @@ def post_bid_request(bid_request: BidRequest) -> BidResponse:
     bid_response = bid_service.generate_bid(bid_request)
     bid_response.ext = "passed post_bid_request: " + str(bid_request)
     return bid_response
+
+
+@router.post("/notice")
+def post_notice(status: int):
+    bid_status = BidStatus(status)
+    # TODO update in the db
 
 
 @router.get("/metrics")
