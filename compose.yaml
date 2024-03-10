@@ -8,6 +8,7 @@ services:
       dockerfile: ./ad_publisher/Dockerfile
     volumes:
       - "./ad_publisher/src:/ad_publisher/src"
+    env_file: ./ad_publisher/.env
     ports:
       - "80:80"
     networks:

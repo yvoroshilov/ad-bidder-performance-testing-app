@@ -1,9 +1,8 @@
 import datetime
-from typing import List
-
-from pydantic import BaseModel
+from typing import List, Dict
 
 from ad_bidder_common.model.openrtb.request import Device, User, Impression
+from pydantic import BaseModel
 
 
 class AdRequest(BaseModel):
@@ -14,7 +13,7 @@ class AdRequest(BaseModel):
 
 
 class AdResponse(BaseModel):
-    html: str
+    imp_html: Dict[str, str]
 
 
 class AdBidder(BaseModel):

@@ -1,20 +1,19 @@
 import logging as log
 
+import ad_publisher.auction.service as auction_service
+from ad_publisher.ad.model import AdRequest, AdResponse
 from fastapi import APIRouter
 from starlette import status
 from starlette.responses import Response
 
-import ad_publisher.auction.service as auction_service
-from ad_publisher.ad.model import AdRequest, AdResponse
-
 router = APIRouter()
+
 
 @router.post("/")
 def post_ad(ad_request: AdRequest) -> AdResponse:
     auction = auction_service.init_auction(ad_request)
-    imp_id = auction_service.run_auction(auction)
-    return AdResponse(html="a")
-
+    imp_html = auction_service.run_auction(auction)
+    return AdResponse(imp_html=imp_html)
 
 
 @router.post("/generate_log")

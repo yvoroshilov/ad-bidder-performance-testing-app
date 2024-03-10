@@ -2,6 +2,6 @@ global:
   scrape_interval: 5s
 scrape_configs:
   - job_name: 'ad_bidder'
-    metrics_path: /bids/metrics
+    metrics_path: /api/v1/bids/metrics
     static_configs:
       - targets: ['ad_bidder:80']

@@ -3,11 +3,9 @@ import logging as log
 import uuid
 from typing import List, Dict
 
-import httpx
-from starlette import status
-
 from ad_bidder_common.data_gen import gen_bid_request
 from ad_bidder_common.model.openrtb.response import Bid, BidResponse
+from ad_publisher import ad_bidder_client
 from ad_publisher.ad.model import AdRequest, AdBidder
 from ad_publisher.auction.algorithm import DefaultAuctionAlgorithm
 from ad_publisher.auction.model import Auction, BidStatus
@@ -23,7 +21,7 @@ def init_auction(ad_request: AdRequest) -> Auction:
     return auction
 
 
-def run_auction(auction: Auction) -> Dict[str, Bid]:
+def run_auction(auction: Auction) -> Dict[str, str]:
     log.info(f"Auction id={auction.id} started")
     bidders = _get_bidders()
     seat_bids = []
@@ -32,41 +30,33 @@ def run_auction(auction: Auction) -> Dict[str, Bid]:
         seat_bids.append(bid_response.seatbid[0])
 
     bids = [bid for seat_bid in seat_bids for bid in seat_bid.bid]
-    winner_bids = auction.algorithm.calc_winner(bids, auction.reserved_price)
-    winner_bid_ids = set()
-    for winner_bid in winner_bids.values():
-        _notify_bidder(winner_bid, BidStatus.WIN)
-        winner_bid_ids.add(winner_bid.id)
-    for bid in bids:
-        if bid.id not in winner_bid_ids:
-            _notify_bidder(bid, BidStatus.LOSS)
-
-
+    imp_winner_bids = auction.algorithm.calc_winner(bids, auction.reserved_price)
+    imp_html = _notify_bidders(imp_winner_bids, bids)
     _finish_auction(auction)
     log.info(f"Auction id={auction.id} finished")
-    return winner_bids
+    return imp_html
 
 
 def _get_bid(bidder: AdBidder, ad_request: AdRequest) -> BidResponse:
     bid_request = gen_bid_request(ad_request.imps, ad_request.device, ad_request.user)
-    body = bid_request.model_dump(mode="json")
-
-    log.debug("Sending bid request: " + str(body))
-    with httpx.Client() as client:
-        response = client.post(bidder.bid_request_url, json=body)
-        if response.status_code != status.HTTP_200_OK:
-            raise Exception(f"Couldn't get ad response. Received: {str(response)}")
-        return BidResponse.model_validate_json(response.content)
-
-
-def _notify_bidder(bid: Bid, bid_status: BidStatus):
-    with httpx.Client() as client:
-        client.post(url=bid.nurl, params={"status": bid_status.value})
+    return ad_bidder_client.post_bid_request(bidder, bid_request)
 
 
 def _finish_auction(auction: Auction) -> Auction:
     auction.finish_time = datetime.datetime.now()
     return auction
+
+def _notify_bidders(imp_winner_bids: Dict[str, Bid], bids: List[Bid]) -> Dict[str, str]:
+    imp_html = {}
+    for bid in bids:
+        impid = bid.impid
+        win_bid = imp_winner_bids[impid]
+        if win_bid.id == bid.id:
+            html = ad_bidder_client.post_notice(bid, impid, BidStatus.WIN)
+            imp_html[impid] = html
+        else:
+            ad_bidder_client.post_notice(bid, impid, BidStatus.LOSS)
+    return imp_html
 
 
 def _get_reserved_price() -> float:
@@ -75,7 +65,7 @@ def _get_reserved_price() -> float:
 
 def _get_bidders() -> List[AdBidder]:
     # TODO get from db
-    return [AdBidder(id=_gen_id(), bid_request_url=AD_BIDDER_ROOT)]
+    return [AdBidder(id=_gen_id(), bid_request_url=AD_BIDDER_URL_BIDS_REQUEST)]
 
 
 def _gen_id() -> str:

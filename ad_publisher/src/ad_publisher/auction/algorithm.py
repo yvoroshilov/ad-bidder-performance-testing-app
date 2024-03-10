@@ -2,9 +2,8 @@ import logging as log
 from abc import abstractmethod, ABC
 from typing import Dict
 
-from typing_extensions import List
-
 from ad_bidder_common.model.openrtb.response import Bid
+from typing_extensions import List
 
 
 class AuctionAlgorithm(ABC):
@@ -21,7 +20,7 @@ class DefaultAuctionAlgorithm(AuctionAlgorithm):
     def calc_winner(self, bids: List[Bid], reserved_price: float) -> Dict[str, Bid]:
         log.debug("Start calc_winner")
 
-        eligible_bids = filter(lambda bid: bid.price >= reserved_price, bids)
+        eligible_bids = list(filter(lambda bid: bid.price >= reserved_price, bids))
         log.debug(f"Eligible bids count={len(eligible_bids)}")
 
         impid_bids = {}
