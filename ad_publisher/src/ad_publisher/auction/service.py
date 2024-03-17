@@ -46,6 +46,7 @@ def _finish_auction(auction: Auction) -> Auction:
     auction.finish_time = datetime.datetime.now()
     return auction
 
+
 def _notify_bidders(imp_winner_bids: Dict[str, Bid], bids: List[Bid]) -> Dict[str, str]:
     imp_html = {}
     for bid in bids:

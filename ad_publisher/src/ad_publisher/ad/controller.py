@@ -1,10 +1,11 @@
 import logging as log
 
-import ad_publisher.auction.service as auction_service
-from ad_publisher.ad.model import AdRequest, AdResponse
 from fastapi import APIRouter
 from starlette import status
 from starlette.responses import Response
+
+import ad_publisher.auction.service as auction_service
+from ad_publisher.ad.model import AdRequest, AdResponse
 
 router = APIRouter()
 
@@ -31,3 +32,8 @@ def generate_log(log_type: str) -> Response:
         log.warning(f"Not found log message for log type {log_type}")
         return status.HTTP_501_NOT_IMPLEMENTED
     msg_method()
+
+
+@router.post("/test")
+def test():
+    pass

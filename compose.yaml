@@ -59,10 +59,42 @@ services:
       - "3100"
     networks:
       - backend
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: unless-stopped
+    command: mongod --auth
+    environment:
+      AD_PUBLISH_USER: ad_publish
+      AD_PUBLISH_PASSWORD: ad_publish123
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: admin
+      MONGODB_DATA_DIR: /data/db
+#      MONDODB_LOG_DIR: /dev/null
+    volumes:
+      - mongodbdata:/data/db
+      - ./mongo/mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro
+    networks:
+      - backend
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    ports:
+      - "7999:7999"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://admin:admin@mongo:27017/admin?ssl=false
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: true
+      ME_CONFIG_MONGODB_AUTH_USERNAME: admin
+      ME_CONFIG_MONGODB_AUTH_PASSWORD: admin
+      PORT: 7999
+    networks:
+      - backend
 networks:
   backend:
 volumes:
   grafana-storage:
+  mongodbdata:
 #volumes:
 #  ad-bidder-common:
 #    driver: local
