@@ -84,9 +84,8 @@ services:
       - "7999:7999"
     environment:
       ME_CONFIG_MONGODB_URL: mongodb://admin:admin@mongo:27017/admin?ssl=false
-      ME_CONFIG_MONGODB_ENABLE_ADMIN: true
-      ME_CONFIG_MONGODB_AUTH_USERNAME: admin
-      ME_CONFIG_MONGODB_AUTH_PASSWORD: admin
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
       PORT: 7999
     networks:
       - backend

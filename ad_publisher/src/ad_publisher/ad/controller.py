@@ -1,11 +1,15 @@
 import logging as log
+from typing import Any
 
+from bson import ObjectId
 from fastapi import APIRouter
+from pydantic import BaseModel, Field, field_validator, AliasChoices
 from starlette import status
 from starlette.responses import Response
 
 import ad_publisher.auction.service as auction_service
 from ad_publisher.ad.model import AdRequest, AdResponse
+from ad_publisher.db.config import get_test_collection
 
 router = APIRouter()
 
@@ -34,6 +38,33 @@ def generate_log(log_type: str) -> Response:
     msg_method()
 
 
-@router.post("/test")
-def test():
-    pass
+class IdAlwaysStrMixIn:
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def validate_id(cls, obj: Any) -> str | None:
+        return str(obj) if obj is not None else None
+
+
+class TestObj(BaseModel, IdAlwaysStrMixIn):
+    # AliasChoices are needed to make id appear as "id" and not "_id" in the openAPI documentation
+    id: str | None = Field(validation_alias=AliasChoices("id", "_id"))
+    a: int
+    b: str
+
+
+@router.get("/test")
+def test(find_id: str, resp: Response):
+    log.debug("test")
+    result = get_test_collection().find_one({"_id": ObjectId(find_id)})
+    if result is not None:
+        return TestObj.model_validate(result)
+    else:
+        resp.status_code = status.HTTP_404_NOT_FOUND
+
+
+@router.post("/test_insert")
+def test_insert(body: TestObj) -> TestObj:
+    insert_result = get_test_collection().insert_one(body.model_dump(exclude={"id"}))
+    inserted_obj = get_test_collection().find_one({"_id": insert_result.inserted_id})
+    return TestObj.model_validate(inserted_obj)
