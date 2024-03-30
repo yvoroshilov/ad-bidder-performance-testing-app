@@ -2,8 +2,10 @@ from typing import Optional, List, Any
 
 from pydantic import BaseModel
 
+from ad_bidder_common.model.openrtb.util import MongoDbMixin
 
-class Bid(BaseModel):
+
+class Bid(MongoDbMixin, BaseModel):
     """
     At least one bid object is required in a bid set object.
 
@@ -144,7 +146,7 @@ class SeatBid(BaseModel):
     """
 
 
-class BidResponse(BaseModel):
+class BidResponse(BaseModel, MongoDbMixin):
     """
     The top-level bid response object.
 
@@ -155,7 +157,7 @@ class BidResponse(BaseModel):
     Other attributes are optional since an exchange may establish default values.
     """
 
-    id: str
+    id: str = None
     """
     ID of the bid request to which this is a response.
     """

@@ -2,8 +2,10 @@ from typing import Optional, List, Any, Tuple, Set
 
 from pydantic import BaseModel
 
+from ad_bidder_common.model.openrtb.util import MongoDbMixin
 
-class Content(BaseModel):
+
+class Content(BaseModel, MongoDbMixin):
     """
     This object describes the content in which the impression will appear, which may be syndicated or non-syndicated
     content. This object may be useful when syndicated content contains impressions and does not necessarily match
@@ -167,7 +169,7 @@ class Content(BaseModel):
     """
 
 
-class Producer(BaseModel):
+class Producer(BaseModel, MongoDbMixin):
     """
     This object defines the producer of the content in which the ad will be shown. This is particularly useful when the content is syndicated and may be distributed through different publishers and thus when the producer and publisher are not necessarily the same entity.
     """
@@ -453,7 +455,7 @@ class Geo(BaseModel):
     """
 
 
-class User(BaseModel):
+class User(BaseModel, MongoDbMixin):
     """
     This object contains information known or derived about the human user of the device (i.e., the audience for advertising). The user id is an exchange artifact and may be subject to rotation or other privacy policies. However, when present, this user ID should be stable long enough to serve reasonably as the basis for frequency capping and retargeting.
     """
@@ -519,7 +521,7 @@ class User(BaseModel):
     """
 
 
-class Data(BaseModel):
+class Data(BaseModel, MongoDbMixin):
     """
     This object describes the network an ad will be displayed on. A Network is defined as the parent entity of the Channel object’s entity for the purposes of organizing Channels. Examples are companies that own and/or license a collection of content channels (Viacom, Discovery, CBS, WarnerMedia, Turner and others), or studio that creates such content and self-distributes content. Name is a human-readable field while domain and id can be used for reporting and targeting purposes. See 7.6 for further examples.
     """
@@ -671,7 +673,7 @@ class Banner(BaseModel):
             return self.w, self.h
 
 
-class Impression(BaseModel):
+class Impression(BaseModel, MongoDbMixin):
     """
     At least one impression object is required in a bid request object.
 
@@ -764,7 +766,7 @@ class Impression(BaseModel):
     """
 
 
-class BidRequest(BaseModel):
+class BidRequest(BaseModel, MongoDbMixin):
     """
     Top-level bid request object.
     The top-level bid request object contains a globally unique bid request or auction ID.
@@ -772,7 +774,7 @@ class BidRequest(BaseModel):
     Other attributes are optional since an exchange may establish default values.
     """
 
-    id: str
+    id: str = None
     """
     Unique ID of the bid request, provided by the exchange.
     """
