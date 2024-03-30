@@ -1,0 +1,6 @@
+build==1.0.3
+colorama==0.4.6
+dnspython==2.6.1
+packaging==23.2
+pymongo==4.6.3
+pyproject_hooks==1.0.0

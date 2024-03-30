@@ -2,12 +2,13 @@ import logging as log
 from typing import Optional
 
 import httpx
+from starlette import status
+
 from ad_bidder_common.model.openrtb.request import BidRequest
 from ad_bidder_common.model.openrtb.response import BidResponse, Bid
 from ad_publisher.ad.model import AdBidder
 from ad_publisher.auction.model import BidStatus
 from ad_publisher.constants import AD_BIDDER_URL_ROOT
-from starlette import status
 
 
 def post_bid_request(bidder: AdBidder, bid_request: BidRequest) -> BidResponse:
@@ -20,7 +21,8 @@ def post_bid_request(bidder: AdBidder, bid_request: BidRequest) -> BidResponse:
         return BidResponse.model_validate_json(response.content)
 
 
-def post_notice(bid: Bid, imp_id: str, bid_status: BidStatus) -> Optional[str]:
+def post_notice(bid_status: BidStatus, bid: Bid) -> Optional[str]:
     with httpx.Client() as client:
-        response = client.post(url=AD_BIDDER_URL_ROOT + bid.nurl, params={"status": bid_status.value, "imp_id": imp_id})
+        notice_url = AD_BIDDER_URL_ROOT + bid.nurl
+        response = client.post(url=notice_url , params={"status": bid_status.value, "imp_id": bid.impid})
         return response.text

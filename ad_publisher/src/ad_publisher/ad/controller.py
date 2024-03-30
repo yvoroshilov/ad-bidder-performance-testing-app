@@ -1,9 +1,8 @@
 import logging as log
-from typing import Any
 
 from bson import ObjectId
 from fastapi import APIRouter
-from pydantic import BaseModel, Field, field_validator, AliasChoices
+from pydantic import BaseModel, Field, AliasChoices
 from starlette import status
 from starlette.responses import Response
 
@@ -16,8 +15,7 @@ router = APIRouter()
 
 @router.post("/")
 def post_ad(ad_request: AdRequest) -> AdResponse:
-    auction = auction_service.init_auction(ad_request)
-    imp_html = auction_service.run_auction(auction)
+    imp_html = auction_service.run_auction(ad_request)
     return AdResponse(imp_html=imp_html)
 
 
@@ -37,13 +35,6 @@ def generate_log(log_type: str) -> Response:
         return status.HTTP_501_NOT_IMPLEMENTED
     msg_method()
 
-
-class IdAlwaysStrMixIn:
-
-    @field_validator("id", mode="before")
-    @classmethod
-    def validate_id(cls, obj: Any) -> str | None:
-        return str(obj) if obj is not None else None
 
 
 class TestObj(BaseModel, IdAlwaysStrMixIn):

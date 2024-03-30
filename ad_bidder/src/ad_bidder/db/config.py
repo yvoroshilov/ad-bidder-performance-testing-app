@@ -21,12 +21,12 @@ def init_db_client():
     _mongodb_client.server_info()
     log.debug("Connected to the MongoDB database!")
 
-    collections = _mongodb_client[config.MONGODB_DB_NAME]
-    _test_collection = collections.test
-    _bid_response_collection = collections.bid_response
-    _bid_collection = collections.bid
-    _imp_collection = collections.imp
-    _html_collection = collections.html
+    db = _mongodb_client[config.MONGODB_DB_NAME]
+    _test_collection = db.test
+    _bid_response_collection = db.bid_response
+    _bid_collection = db.bid
+    _imp_collection = db.imp
+    _html_collection = db.html
 
 
 def shutdown_db_client():

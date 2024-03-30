@@ -5,6 +5,7 @@ from typing import List
 from pydantic import BaseModel, ConfigDict
 
 from ad_bidder_common.model.openrtb.response import SeatBid
+from ad_bidder_common.model.openrtb.util import MongoDbMixin
 from ad_publisher.ad.model import AdRequest, AdBidder
 from ad_publisher.auction.algorithm import AuctionAlgorithm
 
@@ -15,10 +16,10 @@ class AuctionStatus(Enum):
     FINISHED = 3
 
 
-class Auction(BaseModel):
+class Auction(BaseModel, MongoDbMixin):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    id: str
+    id: str = None
     reserved_price: float
     start_time: datetime.datetime = None
     finish_time: datetime.datetime = None
