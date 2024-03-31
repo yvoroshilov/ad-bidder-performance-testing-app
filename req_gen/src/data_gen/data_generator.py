@@ -1,11 +1,18 @@
+import datetime
 import functools
 import logging
 import random
 import typing
+from collections.abc import Iterable
 from typing import TypeVar, Type, Any
 
 import pydantic
 import yaml
+
+from data_gen.req_gen import AdRequest
+
+STR_SIZE = 1
+ARR_SIZE = 1
 
 Model = TypeVar("Model", bound="BaseModel")
 logging.basicConfig(level="DEBUG", format="[%(asctime)s] %(levelname)s %(message)s")
@@ -14,7 +21,9 @@ primitives = {
     bool,
     str,
     int,
-    float
+    float,
+    typing.Any,
+    datetime.datetime
 }
 iterables = {
     set,
@@ -25,8 +34,7 @@ iterables = {
     typing.Tuple
 }
 
-
-def gen_for_composite(model_type: Type[Model]) -> Model:
+def gen_for_composite(model_type: Type[Model], *excluded_fields: Iterable[str]) -> Model:
     """
     1. Check if current field is in the config
     2. if in the config, check if multiple values
@@ -37,7 +45,7 @@ def gen_for_composite(model_type: Type[Model]) -> Model:
 
     class_members = typing.get_type_hints(model_type)
     class_members = filter(
-        lambda attr_name: _class_fields_only_filter(attr_name[0], model_type), class_members.items())
+        lambda attr: _class_fields_only_filter(attr[0], model_type), class_members.items())
     class_members = map(
         lambda attr: (attr[0], _map_optional_to_normal(attr[1])), class_members)
     class_members = dict(class_members)
@@ -49,10 +57,12 @@ def gen_for_composite(model_type: Type[Model]) -> Model:
     name_value = {}
     for attr_name in class_members:
         logging.debug(f"attr_name={attr_name}")
-        attr_type = class_members[attr_name]
-        value = _get_value_from_config(model_type, attr_type, attr_name, config)
-        if value is None:
-            value = _gen_value(attr_type)
+        value = None
+        if attr_name not in excluded_fields:
+            attr_type = class_members[attr_name]
+            value = _get_value_from_config(model_type, attr_type, attr_name, config)
+            if value is None:
+                value = _gen_value(attr_type)
         name_value[attr_name] = value
 
     if issubclass(model_type, pydantic.BaseModel):
@@ -94,7 +104,9 @@ def _gen_value(attr_type: Any, recursion_level: int = 0) -> Any:
         bool: _gen_bool,
         str: _gen_str,
         int: _gen_int,
-        float: _gen_float
+        float: _gen_float,
+        typing.Any: _gen_any,
+        datetime.datetime: lambda: datetime.datetime.now()
     }
 
     if _is_primitive_type(attr_type):
@@ -103,7 +115,7 @@ def _gen_value(attr_type: Any, recursion_level: int = 0) -> Any:
     elif _is_iterable_type(attr_type):
         arr = []
         iterable_elem_type = typing.get_args(attr_type)[0]
-        for _ in range(10):
+        for _ in range(ARR_SIZE):
             logging.debug(recursion_pad + f"Descending into recursion 😨, level={recursion_level + 1}")
             arr.append(_gen_value(iterable_elem_type, recursion_level + 1))
         result = arr
@@ -119,7 +131,9 @@ def _gen_value(attr_type: Any, recursion_level: int = 0) -> Any:
 
 
 def _gen_str() -> str:
-    return chr(random.randint(32, 126))
+    str_len = random.randint(1, STR_SIZE)
+    result = functools.reduce(lambda prev, cur: prev + cur, {chr(random.randint(32, 126)) for _ in range(str_len)})
+    return result
 
 
 def _gen_int() -> int:
@@ -133,6 +147,11 @@ def _gen_float() -> float:
 def _gen_bool() -> bool:
     return random.choice((True, False))
 
+def _gen_any() -> Any:
+    class Empty(pydantic.BaseModel):
+        pass
+    return Empty()
+
 
 def _is_primitive_type(typ: Type) -> bool:
     return typ in primitives
@@ -143,7 +162,7 @@ def _is_iterable_type(typ: Type) -> bool:
 
 
 def _class_fields_only_filter(attr_name: str, typ: Type[Any]) -> bool:
-    return not attr_name.startswith("__") and (not hasattr(typ, attr_name) or not callable(getattr(typ, attr_name)))
+    return not attr_name.startswith("_") and (not hasattr(typ, attr_name) or not callable(getattr(typ, attr_name)))
 
 
 def _map_optional_to_normal(typ: Type) -> Type:
@@ -164,8 +183,8 @@ def _read_config() -> dict:
 
 
 def _access_config_dot(key: str, config: dict) -> Any:
-    return functools.reduce(lambda cfg, part: cfg[part] if cfg is not None and part in cfg else None, key.split("."),
-                            config)
+    return functools.reduce(lambda cfg, part:
+        cfg[part] if cfg is not None and part in cfg else None, key.split("."), config)
 
 
 if __name__ == "__main__":
@@ -186,4 +205,4 @@ if __name__ == "__main__":
             return "e"
 
 
-    logging.debug(gen_for_composite(Test2))
+    logging.debug(gen_for_composite(AdRequest).model_dump_json(indent=2))
