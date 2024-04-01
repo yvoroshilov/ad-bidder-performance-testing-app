@@ -7,6 +7,7 @@ fastapi==0.103.2
 h11==0.14.0
 idna==3.4
 prometheus-client==0.17.1
+prometheus-fastapi-instrumentator==5.10.0
 pydantic==2.4.2
 pydantic_core==2.10.1
 pydevd-pycharm==233.14475.56

@@ -11,13 +11,7 @@ from ad_bidder_common.model.openrtb.response import BidResponse
 
 router = APIRouter()
 
-summary = prom.Summary(
-    "post_bid_summary",
-    "Post Bid summary",
-)
 
-
-@summary.time()
 @router.post(AD_BIDDER_BID_REQUEST)
 def post_bid_request(bid_request: BidRequest) -> BidResponse:
     log.debug(str(bid_request.ext))
