@@ -32,6 +32,8 @@ def process_notice(bid_id: str, imp_id: str, status: int) -> str | None:
         log.debug(f"Bid {bid_id} won")
         process_result = _get_html(bid_id, imp_id)
     else:
+        db.get_bid_collection().update_one({"_id": ObjectId(bid_id)}, {"$set": {"ext.win": False}})
+        log.debug(f"Bid {bid_id} won")
         process_result = None
 
     return process_result
@@ -64,10 +66,13 @@ def _create_seat_bid(imps: List[Impression], bid_request: BidRequest) -> SeatBid
     return SeatBid(bid=bids)
 
 
-def _insert_imps_into_db(imps: List[Impression]):
+def _insert_imps_into_db(imps: list[Impression]):
     for imp in imps:
-        result = db.get_imp_collection().insert_one(imp.dump_mongo())
-        imp.id = str(result.inserted_id)
+        # TODO WARNING possible id clash
+        find_result = db.get_imp_collection().find_one({"_id": ObjectId(imp.id)})
+        if find_result is None:
+            insert_result = db.get_imp_collection().insert_one({"_id": ObjectId(imp.id), **imp.dump_mongo()})
+            imp.id = str(insert_result.inserted_id)
 
 
 def _get_html(bid_id: str, imp_id: str) -> str:

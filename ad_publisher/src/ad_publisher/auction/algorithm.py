@@ -2,8 +2,9 @@ import logging as log
 from abc import abstractmethod, ABC
 from typing import Dict
 
-from ad_bidder_common.model.openrtb.response import Bid
 from typing_extensions import List
+
+from ad_bidder_common.model.openrtb.response import Bid
 
 
 class AuctionAlgorithm(ABC):
@@ -32,7 +33,11 @@ class DefaultAuctionAlgorithm(AuctionAlgorithm):
 
         winners = {}
         for impid in impid_bids:
+            log.debug(f"Calculating bid for impid={impid}")
+
             bids_for_impid = impid_bids[impid]
+            log.debug(f"Elibigle bids={list(map(lambda bid: bid.price, eligible_bids))}")
+
             highest_price_bid = max(bids_for_impid, key=lambda bid: bid.price)
             winners[impid] = highest_price_bid
             log.debug(f"Winner for impid={impid} is bid with price={winners[impid].price}")

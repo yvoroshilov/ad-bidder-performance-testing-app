@@ -11,10 +11,11 @@ _test_collection: Collection | None = None
 _auction_collection: Collection | None = None
 _bidder_collection: Collection | None = None
 _bid_request_collection: Collection | None = None
+_imp_collection: Collection | None = None
 
 
 def init_db_client():
-    global _mongodb_client, _test_collection, _auction_collection, _bidder_collection, _bid_request_collection
+    global _mongodb_client, _test_collection, _auction_collection, _bidder_collection, _bid_request_collection, _imp_collection
     url = f"mongodb://{config.MONGODB_USERNAME}:{config.MONGODB_PASSWORD}@{config.MONGODB_HOST}"
     _mongodb_client = MongoClient(url, serverSelectionTimeoutMS=3000)
     _mongodb_client.server_info()
@@ -25,6 +26,7 @@ def init_db_client():
     _auction_collection = db.auction
     _bidder_collection = db.bidder
     _bid_request_collection = db.bid_request
+    _imp_collection = db.imp
 
 
 def shutdown_db_client():
@@ -45,3 +47,7 @@ def get_bidder_collection() -> Collection:
 
 def get_bid_request_collection() -> Collection:
     return _bid_request_collection
+
+
+def get_imp_collection() -> Collection:
+    return _imp_collection
