@@ -8,7 +8,7 @@ datasources:
     type: prometheus
     access: proxy
     # Access mode - proxy (server in the UI) or direct (browser in the UI).
-    url: http://metric:9090
+    url: http://prom:9090
     jsonData:
       httpMethod: POST
       manageAlerts: true
