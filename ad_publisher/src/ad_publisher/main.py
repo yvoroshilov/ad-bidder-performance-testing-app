@@ -8,12 +8,14 @@ from ad_publisher.log import configure_logging
 
 if config.DEBUG:
     import pydevd_pycharm
+
     pydevd_pycharm.settrace('host.docker.internal', port=12345, stdoutToServer=True, stderrToServer=True)
 
 configure_logging()
 
 app = FastAPI(title="AD PUBLISHER")
 app.include_router(ad_router, prefix=AD_PUBLISHER_ADS_ROOT, tags=["ad"])
+
 
 @app.on_event("startup")
 def startup():

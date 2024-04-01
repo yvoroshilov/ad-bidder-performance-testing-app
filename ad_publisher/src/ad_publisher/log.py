@@ -3,7 +3,7 @@ from enum import Enum
 
 from ad_publisher.config import LOG_LEVEL
 
-LOG_FORMAT_DEBUG = "%(levelname)s:%(message)s:%(pathname)s:%(funcName)s:%(lineno)d"
+LOG_FORMAT_DEBUG = "%(levelname)s %(message)s"
 
 
 class LogLevel(str, Enum):

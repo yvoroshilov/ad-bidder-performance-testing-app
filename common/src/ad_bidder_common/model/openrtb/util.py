@@ -15,8 +15,8 @@ class MongoDbMixin:
 
     @classmethod
     def validate_mongo(cls, obj: Any, **kwargs) -> Model:
-        model = cls.model_validate(obj, **kwargs)
-        model.id = str(obj["_id"]) if obj["_id"] is not None else model.id
+        mongo_id = str(obj["_id"]) if obj.get("_id") is not None else None
+        model = cls.model_validate({**obj, "id": mongo_id}, **kwargs)
         return model
 
     @classmethod
@@ -28,4 +28,5 @@ class MongoDbMixin:
         return models
 
     def dump_mongo(self, **kwargs):
-        return self.model_dump(exclude={"id"}, **kwargs)
+        extra_exclude = kwargs.get("exclude", set())
+        return self.model_dump(exclude={"id", *extra_exclude}, **kwargs)

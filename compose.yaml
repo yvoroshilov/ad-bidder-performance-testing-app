@@ -64,6 +64,8 @@ services:
     container_name: mongo
     restart: unless-stopped
     command: mongod --auth
+    ports:
+      - "27017:27017"
     environment:
       AD_PUBLISH_USER: ad_publish
       AD_PUBLISH_PASSWORD: ad_publish123

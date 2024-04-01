@@ -9,7 +9,7 @@ from ad_bidder.log import configure_logging
 if config.DEBUG:
     import pydevd_pycharm
 
-    pydevd_pycharm.settrace('host.docker.internal', port=12345, stdoutToServer=True, stderrToServer=True)
+    pydevd_pycharm.settrace('host.docker.internal', port=12346, stdoutToServer=True, stderrToServer=True)
 
 configure_logging()
 

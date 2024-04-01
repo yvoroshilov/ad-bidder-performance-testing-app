@@ -2,20 +2,22 @@ import datetime
 import logging as log
 from typing import List, Dict
 
+from bson import ObjectId
+
 import ad_publisher.db.config as db
 from ad_bidder_common.model.openrtb.request import BidRequest
 from ad_bidder_common.model.openrtb.response import Bid, BidResponse
 from ad_publisher import ad_bidder_client
 from ad_publisher.ad.model import AdRequest, AdBidder
 from ad_publisher.auction.algorithm import DefaultAuctionAlgorithm
-from ad_publisher.auction.model import Auction, BidStatus
+from ad_publisher.auction.model import Auction, BidStatus, AuctionStatus
 
 
 def run_auction(ad_request: AdRequest) -> Dict[str, str]:
     auction = create_auction(ad_request)
     log.info(f"Auction id={auction.id} started")
 
-    bidders = _get_bidders()
+    bidders = auction.bidders
     seat_bids = []
     for bidder in bidders:
         bid_response = _get_bid(bidder, auction.ad_request)
@@ -38,7 +40,7 @@ def create_auction(ad_request: AdRequest) -> Auction:
                       bidders=bidders, algorithm=algorithm, start_time=start_time)
 
     insert_result = db.get_auction_collection().insert_one(auction.dump_mongo())
-    auction.id = insert_result.inserted_id
+    auction.id = str(insert_result.inserted_id)
     log.debug(f"Auction created: {auction}")
 
     return auction
@@ -46,11 +48,14 @@ def create_auction(ad_request: AdRequest) -> Auction:
 
 def _get_bid(bidder: AdBidder, ad_request: AdRequest) -> BidResponse:
     bid_request = BidRequest(imp=ad_request.imps, device=ad_request.device, user=ad_request.user)
+    insert_result = db.get_bid_request_collection().insert_one(bid_request.dump_mongo())
+    bid_request.id = str(insert_result.inserted_id)
     return ad_bidder_client.post_bid_request(bidder, bid_request)
 
 
 def _finish_auction(auction: Auction) -> Auction:
     auction.finish_time = datetime.datetime.now()
+    db.get_auction_collection().update_one({"_id": ObjectId(auction.id)}, {"$set": {"finish_time": auction.finish_time, "status": AuctionStatus.FINISHED.value}})
     return auction
 
 

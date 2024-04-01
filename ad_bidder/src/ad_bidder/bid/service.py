@@ -3,6 +3,8 @@ import random
 import uuid
 from typing import List
 
+from bson import ObjectId
+
 import ad_bidder.db.config as db
 from ad_bidder.bid.model import BidStatus
 from ad_bidder.constant import AD_BIDDER_BID_NOTICE, AD_BIDDER_BID_ROOT, compose_path
@@ -16,7 +18,7 @@ def generate_bid(bid_request: BidRequest) -> BidResponse:
     if len(bid_request.imp) == 0:
         raise Exception("Amount of impressions cannot be 0")
 
-    _create_imp(bid_request.imp)
+    _insert_imps_into_db(bid_request.imp)
     seat_bid = _create_seat_bid(bid_request.imp, bid_request)
     bid_response = _create_bid_response(seat_bid, bid_request)
     log.debug(f"Generated bid response id={bid_response.id}")
@@ -25,11 +27,10 @@ def generate_bid(bid_request: BidRequest) -> BidResponse:
 
 def process_notice(bid_id: str, imp_id: str, status: int) -> str | None:
     bid_status = BidStatus(status)
-    process_result = None
     if bid_status == BidStatus.WIN:
-        db.get_bid_collection().update_one({"_id": bid_id}, {"$set": {"ext.win": True}})
+        db.get_bid_collection().update_one({"_id": ObjectId(bid_id)}, {"$set": {"ext.win": True}})
         log.debug(f"Bid {bid_id} won")
-        process_result = _generate_html(bid_id, imp_id)
+        process_result = _get_html(bid_id, imp_id)
     else:
         process_result = None
 
@@ -39,8 +40,8 @@ def process_notice(bid_id: str, imp_id: str, status: int) -> str | None:
 def _create_bid_response(seat_bid: SeatBid, bid_request: BidRequest) -> BidResponse:
     bid_response = BidResponse(id=bid_request.id, seatbid=[seat_bid], bidid=str(uuid.uuid4()))
 
-    result = db.get_bid_response_collection().insert_one(bid_response.dump_mongo())
-    bid_response.id = result.inserted_id
+    result = db.get_bid_response_collection().insert_one({"_id": ObjectId(bid_request.id), **bid_response.dump_mongo()})
+    bid_response.id = str(result.inserted_id)
 
     return bid_response
 
@@ -48,25 +49,28 @@ def _create_bid_response(seat_bid: SeatBid, bid_request: BidRequest) -> BidRespo
 def _create_seat_bid(imps: List[Impression], bid_request: BidRequest) -> SeatBid:
     bids = []
     for imp in imps:
-        bid = Bid(id=str(uuid.uuid4()), impid=imp.id, price=round(random.random() * 10, 2))
-        bid.nurl = compose_path(AD_BIDDER_BID_ROOT, AD_BIDDER_BID_NOTICE.format(bid_id = bid.id))
+        bid = Bid(id="dummy", impid=imp.id, price=round(random.random() * 10, 2), ext={})
         bids.append(bid)
         log.debug(f"Bid for imp id={imp.id} was generated with price={bid.price}")
 
     result = db.get_bid_collection().insert_many(map(Bid.dump_mongo, bids))
     for i, inserted_id in enumerate(result.inserted_ids):
-        bids[i].id = inserted_id
+        inserted_id_str = str(inserted_id)
+        bids[i].id = inserted_id_str
+        nurl = compose_path(AD_BIDDER_BID_ROOT, AD_BIDDER_BID_NOTICE.format(bid_id=inserted_id_str))
+        bids[i].nurl = nurl
+        db.get_bid_collection().update_one({"_id": inserted_id}, {"$set": {"nurl": nurl}})
 
     return SeatBid(bid=bids)
 
 
-def _create_imp(imps: List[Impression]):
+def _insert_imps_into_db(imps: List[Impression]):
     for imp in imps:
         result = db.get_imp_collection().insert_one(imp.dump_mongo())
-        imp.id = result.inserted_id
+        imp.id = str(result.inserted_id)
 
 
-def _generate_html(bid_id: str, imp_id: str) -> str:
+def _get_html(bid_id: str, imp_id: str) -> str:
     html_count = db.get_html_collection().estimated_document_count()
     log.debug(f"{html_count} elements in html collection")
 
@@ -75,8 +79,8 @@ def _generate_html(bid_id: str, imp_id: str) -> str:
 
     cursor = db.get_html_collection().aggregate([{"$skip": skip_n}, {"$limit": 1}])
     result_html = list(cursor)[0]
-    log.debug(f"Generated html: {result_html.html}")
+    log.debug(f"Generated html: {result_html['html']}")
 
-    db.get_bid_collection().update_one({"_id": bid_id}, {"$set": {"ext.html": result_html.html}})
+    db.get_bid_collection().update_one({"_id": ObjectId(bid_id)}, {"$set": {"ext.result_html": result_html["html"]}})
 
     return result_html.html
