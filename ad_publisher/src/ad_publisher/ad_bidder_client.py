@@ -25,6 +25,6 @@ def post_notice(bid_status: BidStatus, bid: Bid) -> Optional[str]:
     with httpx.Client(timeout=None) as client:
         notice_url = AD_BIDDER_URL_ROOT + bid.nurl
         response = client.post(url=notice_url, params={"status": bid_status.value, "imp_id": bid.impid})
-        if response.status_code == status.HTTP_200_OK:
+        if response.status_code != status.HTTP_200_OK:
             raise Exception(f"Couldn't post notice. Received: {response}")
         return response.text
