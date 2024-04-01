@@ -3,13 +3,11 @@ import functools
 import logging
 import random
 import typing
-from collections.abc import Iterable
+from collections.abc import Collection
 from typing import TypeVar, Type, Any
 
 import pydantic
 import yaml
-
-from data_gen.req_gen import AdRequest
 
 STR_SIZE = 1
 ARR_SIZE = 1
@@ -34,7 +32,9 @@ iterables = {
     typing.Tuple
 }
 
-def gen_for_composite(model_type: Type[Model], *excluded_fields: Iterable[str]) -> Model:
+
+def gen_for_composite(model_type: Type[Model], *, excluded_fields: Collection[str] = (),
+                      custom_values: dict[str, Any] = {}) -> Model:
     """
     1. Check if current field is in the config
     2. if in the config, check if multiple values
@@ -57,8 +57,8 @@ def gen_for_composite(model_type: Type[Model], *excluded_fields: Iterable[str]) 
     name_value = {}
     for attr_name in class_members:
         logging.debug(f"attr_name={attr_name}")
-        value = None
-        if attr_name not in excluded_fields:
+        value = custom_values.get(attr_name)
+        if attr_name not in custom_values and attr_name not in excluded_fields:
             attr_type = class_members[attr_name]
             value = _get_value_from_config(model_type, attr_type, attr_name, config)
             if value is None:
@@ -119,10 +119,12 @@ def _gen_value(attr_type: Any, recursion_level: int = 0) -> Any:
             logging.debug(recursion_pad + f"Descending into recursion 😨, level={recursion_level + 1}")
             arr.append(_gen_value(iterable_elem_type, recursion_level + 1))
         result = arr
-    else:
+    elif issubclass(attr_type, pydantic.BaseModel):
         logging.debug(recursion_pad + f"Composing {attr_type} 😨😨")
         result = gen_for_composite(attr_type)
         logging.debug(recursion_pad + f"Composed {attr_type} 😌😌!")
+    else:
+        raise Exception(f"Unknown type={attr_type}!")
 
     if recursion_level > 0:
         logging.debug(recursion_pad + f"Ending recursion 😌, level={recursion_level}")
@@ -147,9 +149,11 @@ def _gen_float() -> float:
 def _gen_bool() -> bool:
     return random.choice((True, False))
 
+
 def _gen_any() -> Any:
     class Empty(pydantic.BaseModel):
         pass
+
     return Empty()
 
 
@@ -184,7 +188,7 @@ def _read_config() -> dict:
 
 def _access_config_dot(key: str, config: dict) -> Any:
     return functools.reduce(lambda cfg, part:
-        cfg[part] if cfg is not None and part in cfg else None, key.split("."), config)
+                            cfg[part] if cfg is not None and part in cfg else None, key.split("."), config)
 
 
 if __name__ == "__main__":
