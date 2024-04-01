@@ -78,9 +78,9 @@ def _get_html(bid_id: str, imp_id: str) -> str:
     log.debug(f"Getting {skip_n}th element")
 
     cursor = db.get_html_collection().aggregate([{"$skip": skip_n}, {"$limit": 1}])
-    result_html = list(cursor)[0]
-    log.debug(f"Generated html: {result_html['html']}")
+    result_html = list(cursor)[0]["html"]
+    log.debug(f"Generated html: {result_html}")
 
-    db.get_bid_collection().update_one({"_id": ObjectId(bid_id)}, {"$set": {"ext.result_html": result_html["html"]}})
+    db.get_bid_collection().update_one({"_id": ObjectId(bid_id)}, {"$set": {"ext.result_html": result_html}})
 
-    return result_html.html
+    return result_html
