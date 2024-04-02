@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from ad_publisher import config
 from ad_publisher.ad.controller import router as ad_router
@@ -14,12 +15,14 @@ if config.DEBUG:
 configure_logging()
 
 app = FastAPI(title="AD PUBLISHER")
-app.include_router(ad_router, prefix=AD_PUBLISHER_ADS_ROOT, tags=["ad"])
+app.include_router(ad_router, prefix=AD_PUBLISHER_ADS_ROOT, tags=["ads"])
+instrumentator = Instrumentator().instrument(app)
 
 
 @app.on_event("startup")
 def startup():
     init_db_client()
+    instrumentator.expose(app)
 
 
 @app.on_event("shutdown")

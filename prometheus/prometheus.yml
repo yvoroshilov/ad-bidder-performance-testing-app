@@ -2,9 +2,13 @@ global:
   scrape_interval: 5s
 scrape_configs:
   - job_name: 'ad_bidder'
-    metrics_path: /api/v1/bids/metrics
+    metrics_path: /metrics
     static_configs:
       - targets: ['ad_bidder:80']
+  - job_name: 'ad_publisher'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['ad_publisher:80']
   - job_name: 'mongodb'
     static_configs:
       - targets: ['mongodb-exporter:9216']
