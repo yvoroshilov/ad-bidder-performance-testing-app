@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import db_config as db
 from ad_bidder_common.model.openrtb.util import MongoDbMixin
 
-BIDDER_N = 1
+BIDDER_N = 10
 HTML_N = 10
 
 

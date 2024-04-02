@@ -9,9 +9,6 @@ from typing import TypeVar, Type, Any
 import pydantic
 import yaml
 
-STR_SIZE = 1
-ARR_SIZE = 1
-
 Model = TypeVar("Model", bound="BaseModel")
 logging.basicConfig(level="DEBUG", format="[%(asctime)s] %(levelname)s %(message)s")
 
@@ -33,8 +30,8 @@ iterables = {
 }
 
 
-def gen_for_composite(model_type: Type[Model], *, excluded_fields: Collection[str] = (),
-                      custom_values: dict[str, Any] = {}) -> Model:
+def gen_for_composite(model_type: Type[Model], *, str_size: int = 1, arr_size: int = 1,
+                      excluded_fields: Collection[str] = (), custom_values: dict[str, Any] = {}) -> Model:
     """
     1. Check if current field is in the config
     2. if in the config, check if multiple values
@@ -62,7 +59,7 @@ def gen_for_composite(model_type: Type[Model], *, excluded_fields: Collection[st
             attr_type = class_members[attr_name]
             value = _get_value_from_config(model_type, attr_type, attr_name, config)
             if value is None:
-                value = _gen_value(attr_type)
+                value = _gen_value(attr_type, arr_size=arr_size, str_size=str_size)
         name_value[attr_name] = value
 
     if issubclass(model_type, pydantic.BaseModel):
@@ -97,7 +94,7 @@ def _get_value_from_config(model_type: Type, attr_type: Type, attr_name: str, co
     return result
 
 
-def _gen_value(attr_type: Any, recursion_level: int = 0) -> Any:
+def _gen_value(attr_type: Any, recursion_level: int = 0, arr_size: int = 1, str_size: int = 1) -> Any:
     recursion_pad = "  " * recursion_level
     logging.debug(recursion_pad + f"attr_type={attr_type}")
     primitive_gens = {
@@ -106,16 +103,16 @@ def _gen_value(attr_type: Any, recursion_level: int = 0) -> Any:
         int: _gen_int,
         float: _gen_float,
         typing.Any: _gen_any,
-        datetime.datetime: lambda: datetime.datetime.now()
+        datetime.datetime: lambda **_: datetime.datetime.now()
     }
 
     if _is_primitive_type(attr_type):
-        value = primitive_gens[attr_type]()
+        value = primitive_gens[attr_type](str_size=str_size)
         result = value
     elif _is_iterable_type(attr_type):
         arr = []
         iterable_elem_type = typing.get_args(attr_type)[0]
-        for _ in range(ARR_SIZE):
+        for _ in range(arr_size):
             logging.debug(recursion_pad + f"Descending into recursion 😨, level={recursion_level + 1}")
             arr.append(_gen_value(iterable_elem_type, recursion_level + 1))
         result = arr
@@ -132,25 +129,26 @@ def _gen_value(attr_type: Any, recursion_level: int = 0) -> Any:
     return result
 
 
-def _gen_str() -> str:
-    str_len = random.randint(1, STR_SIZE)
+def _gen_str(**kwargs) -> str:
+    str_size = kwargs["str_size"]
+    str_len = random.randint(1, str_size)
     result = functools.reduce(lambda prev, cur: prev + cur, {chr(random.randint(32, 126)) for _ in range(str_len)})
     return result
 
 
-def _gen_int() -> int:
+def _gen_int(**kwargs) -> int:
     return random.randint(0, 100)
 
 
-def _gen_float() -> float:
+def _gen_float(**kwargs) -> float:
     return random.random() * random.choice((1, 10, 100))
 
 
-def _gen_bool() -> bool:
+def _gen_bool(**kwargs) -> bool:
     return random.choice((True, False))
 
 
-def _gen_any() -> Any:
+def _gen_any(**kwargs) -> Any:
     class Empty(pydantic.BaseModel):
         pass
 
